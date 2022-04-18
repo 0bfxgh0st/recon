@@ -2,6 +2,11 @@
 
 Automated first-look recon script build for Hack The Box.
 
+## Dependencies
+
+- [`nmap`](https://www.kali.org/tools/nmap/).
+- [`dirb`](https://www.kali.org/tools/dirb/).
+
 ## How to use
 
 You can either install it or run the script. If you just want to run the script like this:
