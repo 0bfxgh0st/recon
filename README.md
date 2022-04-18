@@ -23,3 +23,11 @@ And after that you can run in the terminal the following command:
 ```
 recon $ip_address
 ```
+
+## How it looks?
+
+The output is very simple, first you will get a normal `nmap`-like output:
+![Output 0](./assets/output_0.png)
+
+And then you will get a summary for the `Ports`, `Web services`, and so on:
+![Output 1](./assets/output_1.png)
