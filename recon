@@ -5,126 +5,154 @@
 # by 0bfxgh0st #
 ################
 
-COL_BLUE="\e[1;32m"
+COL_MAG_MARK="\e[1;32m"
 COL_YELLOW_MARK="\e[1;33m"
 COL_RED="\e[0;31m"
 COL_END="\e[0m"
 
+if [[ $(id -u) != "0" ]]
+then
+        printf "%s\n" "This program needs root privileges"
+        exit
+fi
 
-###########################################################################################################
+printf "\e[0;32m"
+cat << "EOF"
+
+    .o oOOOOOOOo                                            OOOo
+    Ob.OOOOOOOo  OOOo.      oOOo.                      .adOOOOOOO
+    OboO"""""""""""".OOo. .oOOOOOo.    OOOo.oOOOOOo.."""""""""'OO
+    OOP.oOOOOOOOOOOO "POOOOOOOOOOOo.   `"OOOOOOOOOP,OOOOOOOOOOOB'
+    `O'OOOO'     `OOOOo"OOOOOOOOOOO` .adOOOOOOOOO"oOOO'    `OOOOo
+    .OOOO'            `OOOOOOOOOOOOOOOOOOOOOOOOOO'            `OO
+    OOOOO                 '"OOOOOOOOOOOOOOOO"`                oOO
+   oOOOOOba.                .adOOOOOOOOOOba               .adOOOOo.
+  oOOOOOOOOOOOOOba.    .adOOOOOOOOOO@^OOOOOOOba.     .adOOOOOOOOOOOO
+ OOOOOOOOOOOOOOOOO.OOOOOOOOOOOOOO"`  '"OOOOOOOOOOOOO.OOOOOOOOOOOOOO
+ "OOOO"       "YOoOOOOMOIONODOO"`  .   '"OOROAOPOEOOOoOY"     "OOO"
+    Y           'OOOOOOOOOOOOOO: .oOOo. :OOOOOOOOOOO?'         :`
+    :            .oO%OOOOOOOOOOo.OOOOOO.oOOOOOOOOOOOO?         .
+    .            oOOP"%OOOOOOOOoOOOOOOO?oOOOOO?OOOO"OOo
+                 '%o  OOOO"%OOOO%"%OOOOO"OOOOOO"OOO':
+                      `$"  `OOOO' `O"Y ' `OOOO'  o             .
+    .                  .     OP"          : o     .
+                              :
+                              .
+
+EOF
+printf "\e[0m"
+
+printf "[\e[0;31mR3C0N\e[0m] by \e[0;32m0bfxgh0st\e[0m 4 \e[0;33mWWA\e[0m with \e[5;31m❤\e[0m\n\n"
+
 function _help_(){
-	printf "%s\n" "Recon v0.1"
-	printf "%s\n\n" "Automated first-look recon script build for Hack The Box"
-	printf "%s\n" "~ Nmap tcp scan"
-	printf "%s\n" "~ Web services scan"
-	printf "%s\n" "~ Directory fuzzing (/usr/share/dirb/wordlists/common.txt)"
-	printf "%s\n" "~ Mysql scan"
-	printf "%s\n" "~ SMB scan"
-	printf "%s\n\n" "~ FTP scan"
-	printf "%s\n" "Usage bash recon <host>"
-}
-###########################################################################################################
 
-#################################
+        printf "%s\n" "~ Nmap tcp scan"
+        printf "%s\n" "~ Web services scan"
+        printf "%s\n" "~ Directory fuzzing (/usr/share/dirb/wordlists/common.txt)"
+        printf "%s\n" "~ Mysql scan"
+        printf "%s\n" "~ SMB scan"
+        printf "%s\n\n" "~ FTP scan"
+        printf "%s\n" "Usage recon <host>"
+
+}
+
+if [[ -z "$1" ]];
+then
+        _help_
+        exit
+fi
+
+# some hardcoded stuff
 tmp_dir="/tmp/recon_logs/"
 portscan_file="/tmp/recon_logs/portscan.log"
 target_host="$1"
 hardcoded_wordlist="/usr/share/dirb/wordlists/common.txt"
 rm -r "$tmp_dir" 2>/dev/null
 mkdir "$tmp_dir" 2>/dev/null
-###############################################
 
-####################### Nmap scan #########################
-if [[ "$1" == *"."* ]];
-then
-	nmap -T5 -A "$1" -p- --min-rate 1000 -o "$portscan_file"
-else
-	_help_
-	exit
-fi
-###########################################################
+# Nmap scan
+nmap -A "$1" -p- --min-rate 9000 -o "$portscan_file"
 
-############################################################
+# grepin' some stuff
 find_open=$(cat "$portscan_file" | grep "open" | grep -v "|")
 find_webservice=$(cat "$portscan_file" | grep "open" | grep "http" | grep -v "|")
 find_smb_service=$(cat "$portscan_file" | grep "smb")
 find_ftp_anon=$(cat "$portscan_file" | grep "ftp\|anon\|Anonymous")
 find_mysql=$(cat "$portscan_file" | grep "mysql")
 mysql_ports=$(cat "$portscan_file" | grep "open" | grep "mysql" | awk -F'/' '{print $1}')
-################################################################################################
 
 function _recon_(){
 
-	http_ports=$(printf "$find_open" | grep "http")
-	websrv_port=$(printf "$http_ports" | awk -F'/' '{print $1}')
-	printf -- "\n${COL_YELLOW_MARK}[PORTS]${COL_END}\n"
+        http_ports=$(printf "$find_open" | grep "http")
+        websrv_port=$(printf "$http_ports" | awk -F'/' '{print $1}')
+        printf -- "\n${COL_YELLOW_MARK}[PORTS]${COL_END}\n"
         printf -- "$find_open\n"
-	printf -- "\n${COL_YELLOW_MARK}[WEB SERVICES]${COL_END}\n"
+        printf -- "\n${COL_YELLOW_MARK}[WEB SERVICES]${COL_END}\n"
         printf -- "$find_webservice\n\n"
-	if [[ "$find_smb_service" == *"smb"* ]];
-	then
-		printf "${COL_YELLOW_MARK}[SMB]${COL_END}\n"
-		_smb_ "$1"
-	fi
-	_mysql_loop_
-	printf -- "\n"
-	printf "${COL_YELLOW_MARK}[FUZZIN SERVER]${COL_END}"
-	################ LOOP FOR RECON WEB SERVICES ################
-	#
-	for i in $websrv_port
-	do
-		###################################################
-                dirb http://"$target_host:$i" "$hardcoded_wordlist" -o "$tmp_dir$target_host:$i.common.log"
-		###################################################
-		printf -- "\n\n"
+        if [[ "$find_smb_service" == *"smb"* ]];
+        then
+                printf "${COL_YELLOW_MARK}[SMB]${COL_END}\n"
+                _smb_ "$1"
+        fi
+        _mysql_loop_
+        printf -- "\n"
+        printf "${COL_YELLOW_MARK}[FUZZIN SERVER]${COL_END}"
+        # Loop for recon web services
+        #
+        for i in $websrv_port
+        do
+                dirb http://"$target_host:$i" "$hardcoded_wordlist" -o "$tmp_dir$target_host:$i.common.log" -r
+                printf -- "\n\n"
                 cat "$tmp_dir$target_host:$i.common.log" | grep "DIRECTORY\|+" | sort >> "$tmp_dir$target_host:$i.interestingdirs.log"
-		####################################################
-	done
+        done
 
 }
 
 function _smb_(){
 
-	printf "\e[1;32m[CRACKMAPEXEC]\e[0m\n"
-	crackmapexec smb "$1"
-	printf "\e[1;32m[SMBMAP]\e[0m\n"
-	smbmap -H "$1" 2>&1
-	printf "\e[1;32m[SMBCLIENT]\e[0m"
-	smbclient -L "$1" -N 2>/dev/null > /tmp/proc
-	cat /tmp/proc
-	grep '\$\|Disk\|IPC' /tmp/proc | awk '{print $1}' > /tmp/tmpfile
-	printf "\e[1;32m[SMBCLIENT KNOCKER]\e[0m\n"
-	file=$(cat /tmp/tmpfile)
-	for i in $file
-	do
-        	printf "[\e[1;34m$i\e[0m]\n"
-        	smbclient -N \\\\$1\\$i -c 'pwd;ls'
-	done
-	rm /tmp/proc /tmp/tmpfile
+        printf "${COL_MAG_MARK}[CRACKMAPEXEC]${COL_END}\n"
+        crackmapexec smb "$1"
+        printf "${COL_MAG_MARK}[SMBMAP]${COL_END}\n"
+        smbmap -H "$1" 2>&1
+        printf "${COL_MAG_MARK}[SMBCLIENT]${COL_END}"
+        smbclient -L "$1" -N 2>/dev/null > /tmp/proc
+        cat /tmp/proc
+        grep '\$\|Disk\|IPC' /tmp/proc | awk '{print $1}' > /tmp/tmpfile
+        printf "${COL_MAG_MARK}[SMBCLIENT KNOCKER]${COL_END}\n"
+        file=$(cat /tmp/tmpfile)
+        for i in $file
+        do
+                printf "[\e[1;34m$i${COL_END}]\n"
+                smbclient -N \\\\$1\\$i -c 'pwd;ls'
+        done
+        rm /tmp/proc /tmp/tmpfile
+
 }
 
 function _mysql_loop_(){
-	for j in $mysql_ports
-	do
-	############################ PHP SCRIPT ONE LINE TO CHECK DEFAULT CREDENTIALS CONNECTION TO MYSQL DATABASE <HOST>,'root','','mysql' #######################
-		php -r "\$db = mysqli_connect(\"$target_host:$j\",'root','','mysql');if (\$db){	echo(\"\n[${COL_BLUE}+${COL_END}] [mysql] Access granted to mysql database as root with blank credentials on $target_host:$j\" . \"\n\");}else{	echo(\"\n[${COL_RED}-${COL_END}] [mysql] Denied access on $target_host:$j\" . \"\n\");};" 2>/dev/null | tee "$tmp_dir$target_host.mysqldb.log"
-	done
+
+        for j in $mysql_ports
+        do
+        # PHP script one line to check default credentialas connection to mysql database <host>,'root','','mysql'
+                php -r "\$db = mysqli_connect(\"$target_host:$j\",'root','','mysql');if (\$db){ echo(\"\n[${COL_MAG_MARK}+${COL_END}] [${COL_MAG_MARK}mysql${COL_END}] \e[1mAccess granted\e[0m to mysql database as root with blank credentials on $target_host:$j\" . \"\n\");}else{        echo(\"\n[${COL_RED}-${COL_END}] [mysql] Denied access on $target_host:$j\" . \"\n\");};" 2>/dev/null | tee "$tmp_dir$target_host.mysqldb.log"
+        done
+
 }
 
 
 if [[ "$find_open" == *"http"* ]];
 then
-	_recon_ "$1"
-	exit
+        _recon_ "$1"
+        exit
 fi
 
 if [[ "$find_smb_service" == *"smb"* ]];
 then
-	printf "\n${COL_YELLOW_MARK}[SMB]${COL_END}\n"
-	_smb_ "$1"
+        printf "\n${COL_YELLOW_MARK}[SMB]${COL_END}\n"
+        _smb_ "$1"
 fi
 
 if [[ "$find_mysql" == *"mysql"* ]];
 then
-	_mysql_loop_
+        _mysql_loop_
 fi
