@@ -1,3 +1,6 @@
+# Note:
+FTP function isn't available yet, sorry guys.  
+
 ## Install
 sudo cp -r recon /usr/bin/ && chmod +x /usr/bin/recon
 
