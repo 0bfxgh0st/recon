@@ -71,13 +71,13 @@ rm -r "$tmp_dir" 2>/dev/null
 mkdir "$tmp_dir" 2>/dev/null
 
 # Nmap scan
-nmap -A "$1" -p- --min-rate 9000 -o "$portscan_file"
+nmap -v "$1" -p- --min-rate 5000 -oN "$portscan_file"
 
 # grepin' some stuff
 find_open=$(cat "$portscan_file" | grep "open" | grep -v "|")
 find_webservice=$(cat "$portscan_file" | grep "open" | grep "http" | grep -v "|")
 find_smb_service=$(cat "$portscan_file" | grep "smb")
-find_ftp_anon=$(cat "$portscan_file" | grep "ftp\|anon\|Anonymous")
+#find_ftp_anon=$(cat "$portscan_file" | grep "ftp\|anon\|Anonymous")
 find_mysql=$(cat "$portscan_file" | grep "mysql")
 mysql_ports=$(cat "$portscan_file" | grep "open" | grep "mysql" | awk -F'/' '{print $1}')
 
