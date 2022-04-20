@@ -76,7 +76,7 @@ nmap -v "$1" -p- --min-rate 5000 -oN "$portscan_file"
 # grepin' some stuff
 find_open=$(cat "$portscan_file" | grep "open" | grep -v "|")
 find_webservice=$(cat "$portscan_file" | grep "open" | grep "http" | grep -v "|")
-find_smb_service=$(cat "$portscan_file" | grep "smb")
+find_smb_service=$(cat "$portscan_file" | grep "netbios-ssn")
 #find_ftp_anon=$(cat "$portscan_file" | grep "ftp\|anon\|Anonymous")
 find_mysql=$(cat "$portscan_file" | grep "mysql")
 mysql_ports=$(cat "$portscan_file" | grep "open" | grep "mysql" | awk -F'/' '{print $1}')
@@ -89,7 +89,7 @@ function _recon_(){
         printf -- "$find_open\n"
         printf -- "\n${COL_YELLOW_MARK}[WEB SERVICES]${COL_END}\n"
         printf -- "$find_webservice\n\n"
-        if [[ "$find_smb_service" == *"smb"* ]];
+        if [[ "$find_smb_service" == *"netbios-ssn"* ]];
         then
                 printf "${COL_YELLOW_MARK}[SMB]${COL_END}\n"
                 _smb_ "$1"
@@ -146,7 +146,7 @@ then
         exit
 fi
 
-if [[ "$find_smb_service" == *"smb"* ]];
+if [[ "$find_smb_service" == *"netbios-ssn"* ]];
 then
         printf "\n${COL_YELLOW_MARK}[SMB]${COL_END}\n"
         _smb_ "$1"
