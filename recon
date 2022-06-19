@@ -108,7 +108,7 @@ function _os_detection_(){
 
 }
 
-_os_detection_ "$1"
+_os_detection_ "$1" 2>/dev/null
 
 # Nmap scan
 nmap -v "$1" -p- --open --min-rate 5000 -oN "$portscan_file" --script=ftp-anon
