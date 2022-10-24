@@ -1,5 +1,7 @@
 ## Install
-```sudo cp -r recon /usr/bin/ && sudo chmod +x /usr/bin/recon```
+```
+sudo cp -r recon /usr/bin/ && sudo chmod +x /usr/bin/recon
+```
 
 ```
 ┌──(root💀ghost)-[/home/ghost]
