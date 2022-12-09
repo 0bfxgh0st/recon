@@ -1,0 +1,212 @@
+#!/bin/bash
+
+# Recon - Fast & light first-look scanner by 0bfxgh0st*
+
+COL_MAG_MARK="\e[1;32m"
+COL_YELLOW_MARK="\e[1;33m"
+COL_BLUE_MARK="\e[1;34m"
+COL_RED="\e[0;31m"
+COL_MAG="\e[0;32m"
+COL_YELLOW="\e[0;33m"
+COL_HBEAT="\e[5;31m"
+COL_END="\e[0m"
+
+if [[ $(id -u) != "0" ]]
+then
+	printf "%s\n" "This program needs root privileges"
+	exit
+fi
+
+printf "${COL_MAG}"
+cat << "EOF"
+
+    .o oOOOOOOOo                                            OOOo
+    Ob.OOOOOOOo  OOOo.      oOOo.                      .adOOOOOOO
+    OboO"""""""""""".OOo. .oOOOOOo.    OOOo.oOOOOOo.."""""""""'OO
+    OOP.oOOOOOOOOOOO "POOOOOOOOOOOo.   `"OOOOOOOOOP,OOOOOOOOOOOB'
+    `O'OOOO'     `OOOOo"OOOOOOOOOOO` .adOOOOOOOOO"oOOO'    `OOOOo
+    .OOOO'            `OOOOOOOOOOOOOOOOOOOOOOOOOO'            `OO
+    OOOOO                 '"OOOOOOOOOOOOOOOO"`                oOO
+   oOOOOOba.                .adOOOOOOOOOOba               .adOOOOo.
+  oOOOOOOOOOOOOOba.    .adOOOOOOOOOO@^OOOOOOOba.     .adOOOOOOOOOOOO
+ OOOOOOOOOOOOOOOOO.OOOOOOOOOOOOOO"`  '"OOOOOOOOOOOOO.OOOOOOOOOOOOOO
+ "OOOO"       "YOoOOOOMOIONODOO"`  .   '"OOROAOPOEOOOoOY"     "OOO"
+    Y           'OOOOOOOOOOOOOO: .oOOo. :OOOOOOOOOOO?'         :`
+    :            .oO%OOOOOOOOOOo.OOOOOO.oOOOOOOOOOOOO?         .
+    .            oOOP"%OOOOOOOOoOOOOOOO?oOOOOO?OOOO"OOo
+                 '%o  OOOO"%OOOO%"%OOOOO"OOOOOO"OOO':
+                      `$"  `OOOO' `O"Y ' `OOOO'  o             .
+    .                  .     OP"          : o     .
+                              :
+                              .
+
+EOF
+
+printf "${COL_END}"
+printf "[${COL_RED}R3C0N${COL_END}] by ${COL_MAG}0bfxgh0st*${COL_END} 4 ${COL_YELLOW}WWA${COL_END} with ${COL_HBEAT}❤${COL_END}\n"
+
+function _help_(){
+
+	printf "%s\n"
+	printf "%s\n\n" "Auto recon:"
+        printf "%s\n" "      Tcp port scan"
+        printf "%s\n" "      Web services recognizement"
+        printf "%s\n" "      Web services directories fuzzing (light)"
+        printf "%s\n" "      Check mysql service misconfiguration root:<blank> credentials on mysql database"
+        printf "%s\n" "      Check smb service no-password & shared folders enumeration"
+        printf "%s\n\n" "      Check ftp service misconfiguration anonymous/ftp:<blank> credentials"
+	printf "%s\n\n" "Options:"
+	printf "%s\n\n" "      --axfr          perform axfr attack (dns is required)"
+        printf "%s\n\n" "Usage recon <host>"
+	printf "%s\n\n" "Examples:"
+	printf "%s\n" "recon 10.0.2.15"
+	printf "%s\n" "recon 10.0.2.15 --axfr ghostlab.sv"
+
+}
+
+function _gmsg_(){
+
+        arr[0]="Whoops Team Views CVE-2022-23242 ${COL_YELLOW}WildZarek${COL_END}\n\n"
+        arr[1]="Captain Captain, I see an island :) ${COL_YELLOW}WeaponShotgun${COL_END}\n\n"
+        arr[2]="Can you boost me? Can you bring me the keys? Can you make an autopwn for me? Can you CVE-me? Can you? ${COL_YELLOW}GatoGamer1155${COL_END}\n\n"
+        arr[3]="Let's do some rev engees turn on radare, can you read me that red thing? :P ${COL_YELLOW}YoungerMaster${COL_END}\n\n"
+        arr[4]="Hey I was thinking about this part of the code...oh wait, pull request is already done ${COL_YELLOW}RiJaba1${COL_END}\n\n"
+        arr[5]="Tech me some wins ${COL_YELLOW}S4dbrd${COL_END}\n\n"
+        arr[6]="B.O.T.N.E.T. created by ${COL_YELLOW}Binlaab${COL_END}\n\n"
+        arr[7]="${COL_YELLOW}Cyberapocalypse 2022 whoohoo${COL_END} !\n\n"
+        arr[8]="WWA for the ${COL_YELLOW}#15${COL_END} !\n\n"
+	rand=$[$RANDOM % ${#arr[@]}]
+        printf "${arr[$rand]}"
+
+}
+
+if [[ -z "$1" ]];
+then
+	_help_
+	exit
+fi
+
+if [[ "$2" == "--secret" ]];
+then
+	_gmsg_
+else
+	printf "%s\n"
+fi
+
+if [[ "$2" == "--axfr" ]];
+then
+	if [[ -z "$3" ]]
+	then
+		printf "${COL_RED}Supply dns please${COL_END}\n\nExample:\nrecon 10.0.2.15 --axfr ghostlab.sv"
+		exit
+	else
+		printf "[${COL_MAG_MARK}AXFR${COL_END}]"
+		dig @"$1" "$3" axfr
+		exit
+	fi
+fi
+
+# some hardcoded stuff
+tmp_dir="/tmp/recon_logs/"
+portscan_file="/tmp/recon_logs/$1-nps.log"
+target_host="$1"
+hardcoded_wordlist="/usr/share/dirb/wordlists/common.txt"
+mkdir "$tmp_dir" 2>/dev/null
+
+function _os_detection_(){
+
+        osdetection=$(ping -c 1 -W 2 "$1" | grep -o "ttl=..." | sed 's/ttl=//g')
+
+        if [ "$osdetection" -le "66" ]
+        then
+                printf "[${COL_MAG_MARK}OS${COL_END}] ${COL_YELLOW}Linux${COL_END} (99%%)\n"
+
+        elif [ "$osdetection" -le "129" ]
+        then
+                printf "[${COL_MAG_MARK}OS${COL_END}] ${COL_YELLOW}Windows${COL_END} (99%%)\n"
+        fi
+
+}
+
+_os_detection_ "$1" 2>/dev/null
+
+# Nmap scan
+nmap -v "$1" -p- --open --min-rate 5000 -oN "$portscan_file" --script=ftp-anon
+printf "%s\n"
+
+# grepin' some stuff
+find_open=$(cat "$portscan_file" | grep "open" | grep -v "|")
+find_webservice=$(cat "$portscan_file" | grep "open" | grep "http" | grep -v "|")
+find_smb_service=$(cat "$portscan_file" | grep "netbios-ssn")
+find_ftp_anon=$(cat "$portscan_file" | grep "ftp-anon: Anonymous FTP login allowed")
+find_mysql=$(cat "$portscan_file" | grep "mysql")
+mysql_ports=$(cat "$portscan_file" | grep "open" | grep "mysql" | awk -F'/' '{print $1}')
+#double spaces needed
+ftp_ports=$(cat "$portscan_file" | grep "open  ftp" | awk -F'/' '{print $1}') #
+
+function _web_recon_(){
+
+	http_ports=$(printf "$find_open" | grep "http")
+	websrv_port=$(printf "$http_ports" | awk -F'/' '{print $1}')
+	# Loop for recon web services
+	#
+	for i in $websrv_port
+	do
+		printf "\n[${COL_YELLOW_MARK}i${COL_END}] [${COL_MAG_MARK}WHATWEB${COL_END}]\n"
+		whatweb "$1:$i"
+		printf "\n[${COL_MAG_MARK}+${COL_END}] [${COL_MAG_MARK}WFUZZ${COL_END}]\n*stage 1 --> (light web path fuzzing wordlist:$hardcoded_wordlist)\n"
+		wfuzz -t 100 -c --hc=404 -w "$hardcoded_wordlist" "$target_host:$i/FUZZ" 2>/dev/null
+		printf "*stage 2 --> (light permutated extensions fuzzing wordlist:$hardcoded_wordlist)\n"
+		wfuzz -t 100 -c --hc=404 -z file,"$hardcoded_wordlist" -z list,php-html-txt "$target_host:$i/FUZZ.FUZ2Z" 2>/dev/null
+	done
+
+}
+
+function _smb_(){
+
+        printf "[${COL_YELLOW_MARK}i${COL_END}] [${COL_MAG_MARK}SMB${COL_END}]\n"
+        smbmap -H "$1" 2>&1
+        smbclient -L "$1" -N 2>/dev/null > /tmp/recon_logs/"$1"-smbproc
+        cat /tmp/recon_logs/"$1"-smbproc
+        grep '\$\|Disk\|IPC' /tmp/recon_logs/"$1"-smbproc | awk '{print $1}' > /tmp/recon_logs/"$1"-smbsharedname
+        file=$(cat /tmp/recon_logs/"$1"-smbsharedname)
+        for i in $file
+        do
+                printf "[${COL_BLUE_MARK}$i${COL_END}]\n"
+                smbclient -N \\\\$1\\$i -c 'pwd;ls'
+        done
+ 
+}
+
+function _mysql_loop_(){
+
+	for j in $mysql_ports
+	do
+	# PHP script one line to check default credentialas connection to mysql database <host>,'root','','mysql'
+		php -r "\$db = mysqli_connect(\"$target_host:$j\",'root','','mysql');if (\$db){	echo(\"┌─[${COL_MAG_MARK}+${COL_END}] [${COL_MAG_MARK}mysql${COL_END}]\n└─(Credentials for mysql $target_host:$j)\n  [${COL_YELLOW_MARK}user${COL_END}:${COL_YELLOW_MARK}root${COL_END}][${COL_YELLOW_MARK}password${COL_END}:]\n\" . \"\n\");}else{	echo(\"\n[${COL_RED}-${COL_END}] [mysql] Denied access on $target_host:$j\" . \"\n\");};" 2>/dev/null
+	done
+
+}
+
+if [[ "$find_mysql" == *"mysql"* ]];
+then
+	_mysql_loop_
+fi
+
+if [[ "$find_ftp_anon" == *"ftp-anon: Anonymous FTP login allowed"* ]]
+then
+	printf "┌─[${COL_MAG_MARK}+${COL_END}] [${COL_MAG_MARK}ftp${COL_END}]\n"
+	printf "└─(Credentials for ftp $1:$ftp_ports)\n"
+        printf "  [${COL_YELLOW_MARK}user${COL_END}:${COL_YELLOW_MARK}ftp${COL_END}][${COL_YELLOW_MARK}password${COL_END}:]\n"
+	printf "  [${COL_YELLOW_MARK}user${COL_END}:${COL_YELLOW_MARK}anonymous${COL_END}][${COL_YELLOW_MARK}password${COL_END}:]\n\n"
+fi
+
+if [[ "$find_smb_service" == *"netbios-ssn"* ]];
+then
+	_smb_ "$1"
+fi
+
+if [[ "$find_open" == *"http"* ]];
+then
+	_web_recon_ "$1"
+fi
